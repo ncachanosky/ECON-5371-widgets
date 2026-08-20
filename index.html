@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECON-5371 Interactive Widgets</title>
+<style>
+  :root {
+    --eo-charcoal: #36454F;
+    --eo-copper: #B87333;
+    --eo-sage: #87A96B;
+    --eo-skyblue: #5B9BD5;
+    --eo-terracotta: #D4745E;
+    --eo-lavender: #8E7AB5;
+    --page-bg: #FAFAF8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+    color: var(--eo-charcoal);
+  }
+  header {
+    background: var(--eo-charcoal);
+    color: var(--page-bg);
+    padding: 40px 32px 32px 32px;
+    border-bottom: 4px solid var(--eo-copper);
+  }
+  header h1 {
+    margin: 0;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 1.9rem;
+  }
+  header p {
+    margin: 10px 0 0 0;
+    max-width: 640px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #D8DEE2;
+  }
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 36px 32px 60px 32px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: white;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    border-top: 4px solid var(--card-color, #C9C6BF);
+  }
+  .card .chapter {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--card-color, #6B7680);
+    margin-bottom: 6px;
+  }
+  .card h3 {
+    margin: 0 0 8px 0;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 1.1rem;
+  }
+  .card p {
+    margin: 0 0 16px 0;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: #4B555E;
+    flex-grow: 1;
+  }
+  .card a.launch {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    color: white;
+    background: var(--eo-charcoal);
+    padding: 9px 14px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .card a.launch:hover { opacity: 0.85; }
+  .card .soon {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #9AA1A8;
+    padding: 9px 14px;
+    border: 1px dashed #C9C6BF;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .refresher {
+    margin-top: 40px;
+    padding: 20px 22px;
+    background: white;
+    border: 1px solid #E3E1DC;
+    border-left: 4px solid var(--eo-lavender);
+    border-radius: 10px;
+  }
+  .refresher h3 {
+    margin: 0 0 6px 0;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    color: var(--eo-lavender);
+  }
+  .refresher p { margin: 0; font-size: 0.92rem; color: #4B555E; }
+  footer {
+    text-align: center;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.78rem;
+    color: #9AA1A8;
+    padding: 20px 0 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ECON-5371 — Interactive Study Widgets</h1>
+  <p>Companion widgets for Time Series Analysis and Forecasting. Each widget lets you change model parameters and watch the resulting series, diagnostics, or test statistics update live — a hands-on complement to the textbook derivations, not a replacement for them.</p>
+</header>
+
+<main>
+  <div class="grid">
+
+    <div class="card" style="--card-color:#B87333;">
+      <div class="chapter">Chapter 3 · ARMA</div>
+      <h3>ARMA(2,2) Explorer</h3>
+      <p>Adjust AR and MA coefficients and watch the simulated series, ACF, and PACF update live, with stationarity and invertibility checks.</p>
+      <a class="launch" href="widgets/arma/">Launch widget →</a>
+    </div>
+
+    <div class="card" style="--card-color:#5B9BD5;">
+      <div class="chapter">Chapter 5 · Forecast Evaluation</div>
+      <h3>Loss Functions &amp; DM Test</h3>
+      <p>Compare two competing forecasts under different loss functions and see how the Diebold-Mariano statistic responds.</p>
+      <div class="soon">Coming soon</div>
+    </div>
+
+    <div class="card" style="--card-color:#D4745E;">
+      <div class="chapter">Chapter 6 · Structural Breaks</div>
+      <h3>Structural Break Explorer</h3>
+      <p>Move a break's location and magnitude and watch the Chow / QLR statistic trace respond, illustrating the Davies problem.</p>
+      <div class="soon">Coming soon</div>
+    </div>
+
+    <div class="card" style="--card-color:#87A96B;">
+      <div class="chapter">Chapter 7 · VAR</div>
+      <h3>VAR / Impulse Response Explorer</h3>
+      <p>Adjust a two-variable VAR's coefficients and see how impulse response functions change shape and persistence.</p>
+      <div class="soon">Coming soon</div>
+    </div>
+
+    <div class="card" style="--card-color:#8E7AB5;">
+      <div class="chapter">Chapter 9 · GARCH</div>
+      <h3>GARCH(1,1) Explorer</h3>
+      <p>Move &alpha; and &beta; and watch volatility clustering, persistence, and the unconditional variance respond.</p>
+      <div class="soon">Coming soon</div>
+    </div>
+
+    <div class="card" style="--card-color:#36454F;">
+      <div class="chapter">Chapter 11 · State Space</div>
+      <h3>Kalman Filter / Local Level</h3>
+      <p>Change the signal-to-noise ratio and compare the raw series against the filtered and smoothed estimates.</p>
+      <div class="soon">Coming soon</div>
+    </div>
+
+  </div>
+
+  <div class="refresher">
+    <h3>Filters Refresher (end of course)</h3>
+    <p>A capstone comparison page: the same series run through the HP filter, Beveridge-Nelson decomposition, Kalman/local level filter, and ETS/Holt-Winters smoothing, side by side.</p>
+  </div>
+</main>
+
+<footer>ECON-5371 · Department of Economics and Finance, UTEP — interactive study material.</footer>
+
+</body>
+</html>

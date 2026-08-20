@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ARMA Explorer — ECON-5371</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.32.0/plotly.min.js"></script>
+<style>
+  :root {
+    --eo-charcoal: #36454F;
+    --eo-copper: #B87333;
+    --eo-sage: #87A96B;
+    --eo-skyblue: #5B9BD5;
+    --eo-terracotta: #D4745E;
+    --eo-lavender: #8E7AB5;
+    --page-bg: #FAFAF8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--page-bg);
+    font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+    color: var(--eo-charcoal);
+  }
+
+  header {
+    background: var(--eo-charcoal);
+    color: var(--page-bg);
+    padding: 22px 32px;
+    border-bottom: 4px solid var(--eo-copper);
+  }
+
+  header h1 {
+    margin: 0;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  header p {
+    margin: 6px 0 0 0;
+    font-size: 0.95rem;
+    color: #D8DEE2;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+  }
+
+  .layout {
+    display: flex;
+    gap: 24px;
+    padding: 24px 32px 40px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: flex-start;
+  }
+
+  .controls {
+    flex: 0 0 300px;
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 20px 22px;
+    position: sticky;
+    top: 24px;
+  }
+
+  .controls h2 {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    margin: 0 0 4px 0;
+    color: var(--eo-charcoal);
+  }
+
+  .controls .sub {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.8rem;
+    color: #6B7680;
+    margin-bottom: 18px;
+  }
+
+  .group {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #EFEEEA;
+  }
+  .group:last-of-type { border-bottom: none; }
+
+  .group-label {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--eo-copper);
+    margin-bottom: 10px;
+  }
+
+  .slider-row {
+    margin-bottom: 12px;
+  }
+
+  .slider-row label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+  }
+
+  .slider-row label .val {
+    font-family: Calibri, monospace;
+    font-weight: 600;
+    color: var(--eo-charcoal);
+    background: #F2F0EA;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--eo-copper);
+    cursor: pointer;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  button {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 9px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--eo-charcoal);
+    background: var(--eo-charcoal);
+    color: white;
+    cursor: pointer;
+    flex: 1;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  button.secondary {
+    background: white;
+    color: var(--eo-charcoal);
+  }
+
+  .status {
+    margin-top: 16px;
+    padding: 11px 13px;
+    border-radius: 7px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+  .status.ok {
+    background: #EFF5EA;
+    border: 1px solid var(--eo-sage);
+    color: #4A6B3A;
+  }
+  .status.warn {
+    background: #FBEFEC;
+    border: 1px solid var(--eo-terracotta);
+    color: #8A3F2E;
+  }
+
+  .n-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+  }
+
+  .plots {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .plot-card {
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 6px 6px 2px 6px;
+    margin-bottom: 18px;
+  }
+
+  .plot-card .title {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--eo-charcoal);
+    padding: 10px 14px 0 14px;
+  }
+
+  .acf-pacf-row {
+    display: flex;
+    gap: 18px;
+  }
+  .acf-pacf-row .plot-card { flex: 1; }
+
+  footer {
+    text-align: center;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.78rem;
+    color: #9AA1A8;
+    padding: 10px 0 28px 0;
+  }
+
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    .controls { position: static; flex: 1 1 auto; width: 100%; }
+    .acf-pacf-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ARMA(2,2) Explorer</h1>
+  <p>ECON-5371 · Time Series Analysis and Forecasting — Chapter 3 companion widget</p>
+</header>
+
+<div class="layout">
+
+  <div class="controls">
+    <h2>Process Parameters</h2>
+    <div class="sub">Drag the sliders to change the data-generating process. The series, ACF, and PACF update live.</div>
+
+    <div class="group">
+      <div class="group-label">Autoregressive</div>
+      <div class="slider-row">
+        <label>&phi;&#8321; (AR lag 1) <span class="val" id="val-phi1">0.50</span></label>
+        <input type="range" id="phi1" min="-0.98" max="0.98" step="0.01" value="0.50">
+      </div>
+      <div class="slider-row">
+        <label>&phi;&#8322; (AR lag 2) <span class="val" id="val-phi2">0.00</span></label>
+        <input type="range" id="phi2" min="-0.98" max="0.98" step="0.01" value="0.00">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Moving Average</div>
+      <div class="slider-row">
+        <label>&theta;&#8321; (MA lag 1) <span class="val" id="val-theta1">0.00</span></label>
+        <input type="range" id="theta1" min="-0.98" max="0.98" step="0.01" value="0.00">
+      </div>
+      <div class="slider-row">
+        <label>&theta;&#8322; (MA lag 2) <span class="val" id="val-theta2">0.00</span></label>
+        <input type="range" id="theta2" min="-0.98" max="0.98" step="0.01" value="0.00">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Simulation</div>
+      <div class="slider-row">
+        <label>Innovation variance &sigma;&sup2; <span class="val" id="val-sigma2">1.00</span></label>
+        <input type="range" id="sigma2" min="0.1" max="4" step="0.1" value="1.0">
+      </div>
+      <div class="n-row">
+        <span>T = 250 obs · 100 burn-in</span>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button id="reshuffle">Reshuffle draw</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+    </div>
+
+    <div id="status" class="status ok">Stationary and invertible.</div>
+  </div>
+
+  <div class="plots">
+    <div class="plot-card">
+      <div class="title">Simulated Series</div>
+      <div id="series-plot" style="height: 300px;"></div>
+    </div>
+    <div class="acf-pacf-row">
+      <div class="plot-card">
+        <div class="title">Autocorrelation Function (ACF)</div>
+        <div id="acf-plot" style="height: 260px;"></div>
+      </div>
+      <div class="plot-card">
+        <div class="title">Partial Autocorrelation Function (PACF)</div>
+        <div id="pacf-plot" style="height: 260px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>ECON-5371 · Department of Economics and Finance — interactive study material, not a substitute for the textbook derivations.</footer>
+
+<script>
+// ---------- EO palette ----------
+const COPPER = '#B87333';
+const SKYBLUE = '#5B9BD5';
+const SAGE = '#87A96B';
+const TERRACOTTA = '#D4745E';
+const CHARCOAL = '#36454F';
+const PAGE_BG = '#FAFAF8';
+const GRIDCOLOR = '#E7E5E0';
+
+// ---------- RNG (seedable Box-Muller) ----------
+let seed = 12345;
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let rng = mulberry32(seed);
+function gauss() {
+  // Box-Muller
+  let u1 = rng() || 1e-9, u2 = rng();
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+// ---------- Simulation ----------
+const T = 250;
+const BURN = 100;
+
+function simulateARMA(phi1, phi2, theta1, theta2, sigma) {
+  const N = T + BURN;
+  const eps = new Array(N);
+  for (let i = 0; i < N; i++) eps[i] = gauss() * sigma;
+
+  const y = new Array(N).fill(0);
+  for (let t = 0; t < N; t++) {
+    const yLag1 = t >= 1 ? y[t - 1] : 0;
+    const yLag2 = t >= 2 ? y[t - 2] : 0;
+    const eLag1 = t >= 1 ? eps[t - 1] : 0;
+    const eLag2 = t >= 2 ? eps[t - 2] : 0;
+    y[t] = phi1 * yLag1 + phi2 * yLag2 + eps[t] + theta1 * eLag1 + theta2 * eLag2;
+  }
+  return y.slice(BURN);
+}
+
+// ---------- Stationarity / invertibility checks (AR(2) / MA(2) regions) ----------
+function checkStationary(phi1, phi2) {
+  // AR(2) stationarity triangle
+  return (phi1 + phi2 < 1) && (phi2 - phi1 < 1) && (Math.abs(phi2) < 1);
+}
+function checkInvertible(theta1, theta2) {
+  // Same triangle condition applies to MA(2) invertibility
+  return (theta1 + theta2 < 1) && (theta2 - theta1 < 1) && (Math.abs(theta2) < 1);
+}
+
+// ---------- ACF / PACF ----------
+function acf(y, maxLag) {
+  const n = y.length;
+  const mean = y.reduce((a, b) => a + b, 0) / n;
+  const c0 = y.reduce((s, v) => s + (v - mean) * (v - mean), 0) / n;
+  const out = [];
+  for (let k = 0; k <= maxLag; k++) {
+    let s = 0;
+    for (let t = 0; t < n - k; t++) s += (y[t] - mean) * (y[t + k] - mean);
+    out.push((s / n) / c0);
+  }
+  return out;
+}
+
+function pacfFromACF(rho, maxLag) {
+  // Durbin-Levinson recursion
+  const phi = Array.from({length: maxLag + 1}, () => new Array(maxLag + 1).fill(0));
+  const pacf = new Array(maxLag + 1).fill(0);
+  pacf[0] = 1;
+  if (maxLag >= 1) {
+    phi[1][1] = rho[1];
+    pacf[1] = rho[1];
+  }
+  for (let k = 2; k <= maxLag; k++) {
+    let num = rho[k];
+    for (let j = 1; j <= k - 1; j++) num -= phi[k - 1][j] * rho[k - j];
+    let den = 1;
+    for (let j = 1; j <= k - 1; j++) den -= phi[k - 1][j] * rho[j];
+    const phikk = den !== 0 ? num / den : 0;
+    phi[k][k] = phikk;
+    for (let j = 1; j <= k - 1; j++) {
+      phi[k][j] = phi[k - 1][j] - phikk * phi[k - 1][k - j];
+    }
+    pacf[k] = phikk;
+  }
+  return pacf;
+}
+
+// ---------- Plot styling helpers (EO conventions translated to Plotly) ----------
+function baseLayout(title, xTitle, yTitle) {
+  return {
+    paper_bgcolor: PAGE_BG,
+    plot_bgcolor: PAGE_BG,
+    margin: { l: 50, r: 20, t: 10, b: 40 },
+    font: { family: 'Calibri, sans-serif', color: CHARCOAL, size: 12 },
+    xaxis: {
+      title: xTitle,
+      gridcolor: GRIDCOLOR,
+      zerolinecolor: '#C9C6BF',
+      linecolor: CHARCOAL,
+      ticks: 'outside'
+    },
+    yaxis: {
+      title: yTitle,
+      gridcolor: GRIDCOLOR,
+      zerolinecolor: '#C9C6BF',
+      linecolor: CHARCOAL,
+      ticks: 'outside'
+    },
+    showlegend: false
+  };
+}
+
+function drawSeries(y) {
+  const x = Array.from({length: y.length}, (_, i) => i + 1);
+  const trace = {
+    x, y, type: 'scatter', mode: 'lines',
+    line: { color: COPPER, width: 1.6 }
+  };
+  const layout = baseLayout('', 't', 'y(t)');
+  layout.xaxis.range = [1, y.length];
+  Plotly.react('series-plot', [trace], layout, {displayModeBar: false, responsive: true});
+}
+
+function drawBarWithBands(divId, values, n, color, yTitle) {
+  const maxLag = values.length - 1;
+  const x = Array.from({length: maxLag + 1}, (_, i) => i);
+  const band = 1.96 / Math.sqrt(n);
+
+  const bars = {
+    x, y: values, type: 'bar',
+    marker: { color: color }
+  };
+  const upper = {
+    x, y: x.map(() => band), type: 'scatter', mode: 'lines',
+    line: { color: '#9AA1A8', width: 1, dash: 'dot' }
+  };
+  const lower = {
+    x, y: x.map(() => -band), type: 'scatter', mode: 'lines',
+    line: { color: '#9AA1A8', width: 1, dash: 'dot' }
+  };
+
+  const layout = baseLayout('', 'Lag', yTitle);
+  layout.xaxis.range = [-0.5, maxLag + 0.5];
+  layout.yaxis.range = [-1.05, 1.05];
+
+  Plotly.react(divId, [bars, upper, lower], layout, {displayModeBar: false, responsive: true});
+}
+
+// ---------- Controller ----------
+const sliders = {
+  phi1: document.getElementById('phi1'),
+  phi2: document.getElementById('phi2'),
+  theta1: document.getElementById('theta1'),
+  theta2: document.getElementById('theta2'),
+  sigma2: document.getElementById('sigma2')
+};
+const vals = {
+  phi1: document.getElementById('val-phi1'),
+  phi2: document.getElementById('val-phi2'),
+  theta1: document.getElementById('val-theta1'),
+  theta2: document.getElementById('val-theta2'),
+  sigma2: document.getElementById('val-sigma2')
+};
+const statusBox = document.getElementById('status');
+
+function update() {
+  const phi1 = parseFloat(sliders.phi1.value);
+  const phi2 = parseFloat(sliders.phi2.value);
+  const theta1 = parseFloat(sliders.theta1.value);
+  const theta2 = parseFloat(sliders.theta2.value);
+  const sigma2 = parseFloat(sliders.sigma2.value);
+  const sigma = Math.sqrt(sigma2);
+
+  vals.phi1.textContent = phi1.toFixed(2);
+  vals.phi2.textContent = phi2.toFixed(2);
+  vals.theta1.textContent = theta1.toFixed(2);
+  vals.theta2.textContent = theta2.toFixed(2);
+  vals.sigma2.textContent = sigma2.toFixed(2);
+
+  const stat = checkStationary(phi1, phi2);
+  const inv = checkInvertible(theta1, theta2);
+
+  if (stat && inv) {
+    statusBox.className = 'status ok';
+    statusBox.innerHTML = 'Stationary and invertible. The process has a well-defined, time-invariant ACF.';
+  } else {
+    statusBox.className = 'status warn';
+    let msgs = [];
+    if (!stat) msgs.push('outside the AR(2) stationarity triangle — the series will drift or explode');
+    if (!inv) msgs.push('outside the MA(2) invertibility region — no convergent AR(&infin;) representation exists');
+    statusBox.innerHTML = 'Warning: ' + msgs.join('; ') + '.';
+  }
+
+  const y = simulateARMA(phi1, phi2, theta1, theta2, sigma);
+  drawSeries(y);
+
+  const maxLag = 24;
+  const rho = acf(y, maxLag);
+  const pacfVals = pacfFromACF(rho, maxLag);
+
+  drawBarWithBands('acf-plot', rho, y.length, SKYBLUE, 'ACF');
+  drawBarWithBands('pacf-plot', pacfVals, y.length, SAGE, 'PACF');
+}
+
+Object.values(sliders).forEach(s => s.addEventListener('input', update));
+
+document.getElementById('reshuffle').addEventListener('click', () => {
+  seed = Math.floor(Math.random() * 1e9);
+  rng = mulberry32(seed);
+  update();
+});
+
+document.getElementById('reset').addEventListener('click', () => {
+  sliders.phi1.value = 0.50;
+  sliders.phi2.value = 0.00;
+  sliders.theta1.value = 0.00;
+  sliders.theta2.value = 0.00;
+  sliders.sigma2.value = 1.00;
+  seed = 12345;
+  rng = mulberry32(seed);
+  update();
+});
+
+update();
+</script>
+
+</body>
+</html>
