@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ECON-5371 Interactive Widgets</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap');
+
   :root {
     --eo-charcoal: #36454F;
     --eo-copper: #B87333;
@@ -18,7 +20,7 @@
   body {
     margin: 0;
     background: var(--page-bg);
-    font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+    font-family: 'Source Serif 4', Georgia, serif;
     color: var(--eo-charcoal);
   }
   header {
@@ -29,7 +31,7 @@
   }
   header h1 {
     margin: 0;
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     font-weight: 600;
     font-size: 1.9rem;
   }
@@ -60,7 +62,7 @@
     border-top: 4px solid var(--card-color, #C9C6BF);
   }
   .card .chapter {
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -70,7 +72,7 @@
   }
   .card h3 {
     margin: 0 0 8px 0;
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     font-size: 1.1rem;
   }
   .card p {
@@ -81,7 +83,7 @@
     flex-grow: 1;
   }
   .card a.launch {
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     font-weight: 600;
     font-size: 0.88rem;
     text-decoration: none;
@@ -93,7 +95,7 @@
   }
   .card a.launch:hover { opacity: 0.85; }
   .card .soon {
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     font-weight: 600;
     font-size: 0.85rem;
     color: #9AA1A8;
@@ -112,12 +114,12 @@
   }
   .refresher h3 {
     margin: 0 0 6px 0;
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     color: var(--eo-lavender);
   }
   .refresher p { margin: 0; font-size: 0.92rem; color: #4B555E; }
   .refresher a.launch {
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     font-weight: 600;
     font-size: 0.88rem;
     text-decoration: none;
@@ -129,7 +131,7 @@
   .refresher a.launch:hover { opacity: 0.85; }
   footer {
     text-align: center;
-    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
     font-size: 0.78rem;
     color: #9AA1A8;
     padding: 20px 0 40px 0;
@@ -140,7 +142,7 @@
 
 <header>
   <h1>ECON-5371 — Interactive Study Widgets</h1>
-  <p>Companion widgets for Time Series Analysis and Forecasting. Each widget lets you change model parameters and watch the resulting series, diagnostics, or test statistics update live — a hands-on complement to the textbook derivations, not a replacement for them.</p>
+  <p>Adjust a model's parameters and watch the series, diagnostics, or test statistics respond in real time. A hands-on complement to the textbook — not a substitute for it.</p>
 </header>
 
 <main>
