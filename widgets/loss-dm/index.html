@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Loss Functions &amp; DM Test — ECON-5371</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.32.0/plotly.min.js"></script>
+<style>
+  :root {
+    --eo-charcoal: #36454F;
+    --eo-copper: #B87333;
+    --eo-sage: #87A96B;
+    --eo-skyblue: #5B9BD5;
+    --eo-terracotta: #D4745E;
+    --eo-lavender: #8E7AB5;
+    --page-bg: #FAFAF8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--page-bg);
+    font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+    color: var(--eo-charcoal);
+  }
+  header {
+    background: var(--eo-charcoal);
+    color: var(--page-bg);
+    padding: 22px 32px;
+    border-bottom: 4px solid var(--eo-skyblue);
+  }
+  header h1 {
+    margin: 0;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+  header p {
+    margin: 6px 0 0 0;
+    font-size: 0.95rem;
+    color: #D8DEE2;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+  }
+  a.back {
+    color: #D8DEE2;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    text-decoration: none;
+  }
+  a.back:hover { text-decoration: underline; }
+
+  .layout {
+    display: flex; gap: 24px;
+    padding: 24px 32px 40px 32px;
+    max-width: 1440px; margin: 0 auto;
+    align-items: flex-start;
+  }
+  .controls {
+    flex: 0 0 320px;
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 20px 22px;
+    position: sticky; top: 24px;
+  }
+  .controls h2 {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    margin: 0 0 4px 0;
+  }
+  .controls .sub {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.8rem;
+    color: #6B7680;
+    margin-bottom: 16px;
+  }
+  .group {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #EFEEEA;
+  }
+  .group:last-of-type { border-bottom: none; }
+  .group-label {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .group-label.f1 { color: var(--eo-copper); }
+  .group-label.f2 { color: var(--eo-skyblue); }
+  .group-label.loss { color: var(--eo-lavender); }
+  .group-label.dm { color: var(--eo-sage); }
+
+  .slider-row { margin-bottom: 10px; }
+  .slider-row label {
+    display: flex; justify-content: space-between;
+    font-size: 0.88rem; margin-bottom: 3px;
+  }
+  .slider-row label .val {
+    font-family: Calibri, monospace;
+    font-weight: 600;
+    color: var(--eo-charcoal);
+    background: #F2F0EA;
+    padding: 1px 7px; border-radius: 4px;
+    font-size: 0.8rem;
+  }
+  input[type="range"] { width: 100%; cursor: pointer; }
+  .f1 input[type="range"] { accent-color: var(--eo-copper); }
+  .f2 input[type="range"] { accent-color: var(--eo-skyblue); }
+  .loss input[type="range"] { accent-color: var(--eo-lavender); }
+  .dm input[type="range"] { accent-color: var(--eo-sage); }
+
+  .radio-row {
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.86rem;
+  }
+  .radio-row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .radio-row input[type="radio"] { accent-color: var(--eo-lavender); cursor: pointer; }
+
+  .checkbox-row {
+    display: flex; align-items: center; gap: 7px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.86rem;
+    margin-top: 4px;
+  }
+  .checkbox-row input[type="checkbox"] { accent-color: var(--eo-terracotta); cursor: pointer; }
+
+  button {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem; font-weight: 600;
+    padding: 9px 14px; border-radius: 6px;
+    border: 1px solid var(--eo-charcoal);
+    background: var(--eo-charcoal); color: white;
+    cursor: pointer; width: 100%;
+  }
+  button:hover { opacity: 0.85; }
+
+  .verdict {
+    margin-top: 16px;
+    padding: 13px 14px;
+    border-radius: 7px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  .verdict .stat-line {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+  .verdict.f1wins { background: #FBF2E8; border: 1px solid var(--eo-copper); color: #7A4A17; }
+  .verdict.f2wins { background: #EAF1FA; border: 1px solid var(--eo-skyblue); color: #2C5680; }
+  .verdict.notie  { background: #EFF5EA; border: 1px solid var(--eo-sage); color: #4A6B3A; }
+
+  .plots { flex: 1; min-width: 0; }
+  .plot-card {
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 6px 6px 2px 6px;
+    margin-bottom: 18px;
+  }
+  .plot-card .title {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 10px 14px 0 14px;
+  }
+  .two-col { display: flex; gap: 18px; }
+  .two-col .plot-card { flex: 1; }
+
+  .legend-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.78rem; margin-right: 14px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+  }
+  .legend-chip .sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+  footer {
+    text-align: center;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.78rem; color: #9AA1A8;
+    padding: 10px 0 28px 0;
+  }
+
+  @media (max-width: 960px) {
+    .layout { flex-direction: column; }
+    .controls { position: static; width: 100%; }
+    .two-col { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../">← All widgets</a>
+  <h1>Loss Functions &amp; the Diebold-Mariano Test</h1>
+  <p>ECON-5371 · Time Series Analysis and Forecasting — Chapter 5 companion widget</p>
+</header>
+
+<div class="layout">
+
+  <div class="controls">
+    <h2>Two Competing Forecasts</h2>
+    <div class="sub">Both forecasts target the same series. Shape their error patterns, then judge which is "better" under different loss functions.</div>
+
+    <div class="group f1">
+      <div class="group-label">Forecast 1</div>
+      <div class="slider-row">
+        <label>Bias (mean error) <span class="val" id="val-bias1">0.00</span></label>
+        <input type="range" id="bias1" min="-2" max="2" step="0.05" value="0.0">
+      </div>
+      <div class="slider-row">
+        <label>Volatility (SD) <span class="val" id="val-sd1">1.00</span></label>
+        <input type="range" id="sd1" min="0.2" max="3" step="0.05" value="1.0">
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="fat1">
+        <label for="fat1">Fat tails (occasional large misses)</label>
+      </div>
+    </div>
+
+    <div class="group f2">
+      <div class="group-label">Forecast 2</div>
+      <div class="slider-row">
+        <label>Bias (mean error) <span class="val" id="val-bias2">0.00</span></label>
+        <input type="range" id="bias2" min="-2" max="2" step="0.05" value="0.0">
+      </div>
+      <div class="slider-row">
+        <label>Volatility (SD) <span class="val" id="val-sd2">1.30</span></label>
+        <input type="range" id="sd2" min="0.2" max="3" step="0.05" value="1.3">
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="fat2" checked>
+        <label for="fat2">Fat tails (occasional large misses)</label>
+      </div>
+    </div>
+
+    <div class="group loss">
+      <div class="group-label">Loss Function</div>
+      <div class="radio-row">
+        <label><input type="radio" name="lossfn" value="mse" checked> Squared error (MSE)</label>
+        <label><input type="radio" name="lossfn" value="mae"> Absolute error (MAE)</label>
+        <label><input type="radio" name="lossfn" value="asym"> Asymmetric (&alpha;)</label>
+      </div>
+      <div class="slider-row" id="alpha-row" style="margin-top:10px; display:none;">
+        <label>&alpha; (over- vs. under-prediction) <span class="val" id="val-alpha">0.30</span></label>
+        <input type="range" id="alpha" min="0.05" max="0.95" step="0.05" value="0.30">
+      </div>
+    </div>
+
+    <div class="group dm">
+      <div class="group-label">DM Test Settings</div>
+      <div class="slider-row">
+        <label>Forecast horizon h <span class="val" id="val-h">1</span></label>
+        <input type="range" id="h" min="1" max="8" step="1" value="1">
+      </div>
+      <div class="n-row" style="font-family:Calibri,sans-serif; font-size:0.82rem; color:#6B7680;">
+        n = 120 origins · Newey-West bandwidth K = h − 1
+      </div>
+      <button id="reshuffle" style="margin-top:10px;">Reshuffle draw</button>
+    </div>
+
+    <div id="verdict" class="verdict notie">
+      <div class="stat-line">—</div>
+      <div id="verdict-text">Adjust the sliders to compare forecasts.</div>
+    </div>
+  </div>
+
+  <div class="plots">
+    <div class="plot-card">
+      <div class="title">
+        Forecast Errors Over Time
+        <span style="float:right;">
+          <span class="legend-chip"><span class="sw" style="background:#B87333;"></span>Forecast 1</span>
+          <span class="legend-chip"><span class="sw" style="background:#5B9BD5;"></span>Forecast 2</span>
+        </span>
+      </div>
+      <div id="errors-plot" style="height: 260px;"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="plot-card">
+        <div class="title">Loss Differential, d(t) = L(e₁ₜ) − L(e₂ₜ)</div>
+        <div id="diff-plot" style="height: 260px;"></div>
+      </div>
+      <div class="plot-card">
+        <div class="title">Error Distributions</div>
+        <div id="hist-plot" style="height: 260px;"></div>
+      </div>
+    </div>
+
+    <div class="plot-card">
+      <div class="title">Average Loss by Criterion (both forecasts, all three loss functions)</div>
+      <div id="loss-bars-plot" style="height: 240px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>ECON-5371 · Department of Economics and Finance — interactive study material, not a substitute for the textbook derivations.</footer>
+
+<script>
+// ---------- EO palette ----------
+const COPPER = '#B87333';
+const SKYBLUE = '#5B9BD5';
+const SAGE = '#87A96B';
+const TERRACOTTA = '#D4745E';
+const LAVENDER = '#8E7AB5';
+const CHARCOAL = '#36454F';
+const PAGE_BG = '#FAFAF8';
+const GRIDCOLOR = '#E7E5E0';
+
+// ---------- RNG ----------
+let seed = 20260820;
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let rng = mulberry32(seed);
+function gauss() {
+  let u1 = rng() || 1e-9, u2 = rng();
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+// occasional large draw: mixture of N(0,1) and N(0,9) w.p. 0.12
+function gaussFat() {
+  const big = rng() < 0.12;
+  return gauss() * (big ? 3.2 : 1.0);
+}
+
+const N = 120; // forecast origins
+
+function simulateErrors(bias, sd, fatTails) {
+  const e = new Array(N);
+  for (let t = 0; t < N; t++) {
+    const z = fatTails ? gaussFat() : gauss();
+    e[t] = bias + sd * z;
+  }
+  return e;
+}
+
+// ---------- Loss functions ----------
+function lossMSE(e) { return e * e; }
+function lossMAE(e) { return Math.abs(e); }
+function lossAsym(e, alpha) { return e < 0 ? alpha * Math.abs(e) : (1 - alpha) * Math.abs(e); }
+
+function applyLoss(errs, kind, alpha) {
+  if (kind === 'mse') return errs.map(lossMSE);
+  if (kind === 'mae') return errs.map(lossMAE);
+  return errs.map(e => lossAsym(e, alpha));
+}
+
+// ---------- DM statistic with Newey-West long-run variance ----------
+function dmTest(d, K) {
+  const n = d.length;
+  const dbar = d.reduce((a, b) => a + b, 0) / n;
+  const centered = d.map(x => x - dbar);
+
+  function gamma(k) {
+    let s = 0;
+    for (let t = k; t < n; t++) s += centered[t] * centered[t - k];
+    return s / n;
+  }
+
+  let lrv = gamma(0);
+  for (let k = 1; k <= K; k++) {
+    const w = 1 - k / (K + 1); // Bartlett/Newey-West kernel
+    lrv += 2 * w * gamma(k);
+  }
+  const V = lrv / n;
+  const dm = V > 0 ? dbar / Math.sqrt(V) : 0;
+  return { dbar, dm };
+}
+
+// standard normal CDF approx (Abramowitz-Stegun)
+function normCDF(x) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989423 * Math.exp(-x * x / 2);
+  let p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  if (x > 0) p = 1 - p;
+  return p;
+}
+function twoSidedP(z) { return 2 * (1 - normCDF(Math.abs(z))); }
+
+// ---------- Plot helpers ----------
+function baseLayout(xTitle, yTitle) {
+  return {
+    paper_bgcolor: PAGE_BG, plot_bgcolor: PAGE_BG,
+    margin: { l: 50, r: 20, t: 10, b: 40 },
+    font: { family: 'Calibri, sans-serif', color: CHARCOAL, size: 12 },
+    xaxis: { title: xTitle, gridcolor: GRIDCOLOR, zerolinecolor: '#C9C6BF', linecolor: CHARCOAL, ticks: 'outside' },
+    yaxis: { title: yTitle, gridcolor: GRIDCOLOR, zerolinecolor: '#C9C6BF', linecolor: CHARCOAL, ticks: 'outside' },
+    showlegend: false
+  };
+}
+
+function drawErrors(e1, e2) {
+  const x = Array.from({length: N}, (_, i) => i + 1);
+  const t1 = { x, y: e1, type: 'scatter', mode: 'lines', line: { color: COPPER, width: 1.4 } };
+  const t2 = { x, y: e2, type: 'scatter', mode: 'lines', line: { color: SKYBLUE, width: 1.4 } };
+  const zero = { x, y: x.map(() => 0), type: 'scatter', mode: 'lines', line: { color: '#9AA1A8', width: 1, dash: 'dot' } };
+  const layout = baseLayout('Forecast origin t', 'Error');
+  layout.xaxis.range = [1, N];
+  Plotly.react('errors-plot', [zero, t1, t2], layout, {displayModeBar: false, responsive: true});
+}
+
+function drawDiff(d) {
+  const x = Array.from({length: N}, (_, i) => i + 1);
+  const colors = d.map(v => v >= 0 ? COPPER : SKYBLUE);
+  const bars = { x, y: d, type: 'bar', marker: { color: colors } };
+  const layout = baseLayout('Forecast origin t', 'd(t)');
+  layout.xaxis.range = [1, N];
+  Plotly.react('diff-plot', [bars], layout, {displayModeBar: false, responsive: true});
+}
+
+function drawHist(e1, e2) {
+  const t1 = { x: e1, type: 'histogram', opacity: 0.6, marker: { color: COPPER }, name: 'F1', nbinsx: 24 };
+  const t2 = { x: e2, type: 'histogram', opacity: 0.6, marker: { color: SKYBLUE }, name: 'F2', nbinsx: 24 };
+  const layout = baseLayout('Error', 'Count');
+  layout.barmode = 'overlay';
+  Plotly.react('hist-plot', [t1, t2], layout, {displayModeBar: false, responsive: true});
+}
+
+function drawLossBars(e1, e2, alpha) {
+  const kinds = ['mse', 'mae', 'asym'];
+  const labels = ['MSE', 'MAE', `Asym (α=${alpha.toFixed(2)})`];
+  const avg1 = kinds.map(k => {
+    const l = applyLoss(e1, k, alpha);
+    return l.reduce((a, b) => a + b, 0) / l.length;
+  });
+  const avg2 = kinds.map(k => {
+    const l = applyLoss(e2, k, alpha);
+    return l.reduce((a, b) => a + b, 0) / l.length;
+  });
+  const bar1 = { x: labels, y: avg1, type: 'bar', name: 'Forecast 1', marker: { color: COPPER } };
+  const bar2 = { x: labels, y: avg2, type: 'bar', name: 'Forecast 2', marker: { color: SKYBLUE } };
+  const layout = baseLayout('', 'Average loss');
+  layout.barmode = 'group';
+  layout.showlegend = true;
+  layout.legend = { orientation: 'h', y: -0.25, font: { size: 11 } };
+  Plotly.react('loss-bars-plot', [bar1, bar2], layout, {displayModeBar: false, responsive: true});
+}
+
+// ---------- Controller ----------
+const el = id => document.getElementById(id);
+const sliders = {
+  bias1: el('bias1'), sd1: el('sd1'), fat1: el('fat1'),
+  bias2: el('bias2'), sd2: el('sd2'), fat2: el('fat2'),
+  alpha: el('alpha'), h: el('h')
+};
+const vals = {
+  bias1: el('val-bias1'), sd1: el('val-sd1'),
+  bias2: el('val-bias2'), sd2: el('val-sd2'),
+  alpha: el('val-alpha'), h: el('val-h')
+};
+
+function getLossKind() {
+  return document.querySelector('input[name="lossfn"]:checked').value;
+}
+
+document.querySelectorAll('input[name="lossfn"]').forEach(r => {
+  r.addEventListener('change', () => {
+    el('alpha-row').style.display = getLossKind() === 'asym' ? 'block' : 'none';
+    update();
+  });
+});
+
+function update() {
+  const bias1 = parseFloat(sliders.bias1.value);
+  const sd1 = parseFloat(sliders.sd1.value);
+  const fat1 = sliders.fat1.checked;
+  const bias2 = parseFloat(sliders.bias2.value);
+  const sd2 = parseFloat(sliders.sd2.value);
+  const fat2 = sliders.fat2.checked;
+  const alpha = parseFloat(sliders.alpha.value);
+  const h = parseInt(sliders.h.value);
+  const K = Math.max(0, h - 1);
+  const lossKind = getLossKind();
+
+  vals.bias1.textContent = bias1.toFixed(2);
+  vals.sd1.textContent = sd1.toFixed(2);
+  vals.bias2.textContent = bias2.toFixed(2);
+  vals.sd2.textContent = sd2.toFixed(2);
+  vals.alpha.textContent = alpha.toFixed(2);
+  vals.h.textContent = h;
+
+  // regenerate with fixed seed each call so slider drags are comparable draw-to-draw
+  rng = mulberry32(seed);
+  const e1 = simulateErrors(bias1, sd1, fat1);
+  const e2 = simulateErrors(bias2, sd2, fat2);
+
+  const l1 = applyLoss(e1, lossKind, alpha);
+  const l2 = applyLoss(e2, lossKind, alpha);
+  const d = l1.map((v, i) => v - l2[i]);
+
+  const { dbar, dm } = dmTest(d, K);
+  const p = twoSidedP(dm);
+
+  drawErrors(e1, e2);
+  drawDiff(d);
+  drawHist(e1, e2);
+  drawLossBars(e1, e2, alpha);
+
+  const verdictBox = el('verdict');
+  const statLine = verdictBox.querySelector('.stat-line');
+  const text = el('verdict-text');
+
+  statLine.textContent = `DM = ${dm.toFixed(2)}   (p = ${p.toFixed(3)})`;
+
+  if (p < 0.05 && dbar < 0) {
+    verdictBox.className = 'verdict f1wins';
+    text.textContent = 'Forecast 1 has significantly lower average loss under the selected criterion (reject H₀: equal accuracy, 5% level).';
+  } else if (p < 0.05 && dbar > 0) {
+    verdictBox.className = 'verdict f2wins';
+    text.textContent = 'Forecast 2 has significantly lower average loss under the selected criterion (reject H₀: equal accuracy, 5% level).';
+  } else {
+    verdictBox.className = 'verdict notie';
+    text.textContent = 'Cannot reject H₀: equal predictive accuracy at the 5% level — the observed difference is consistent with sampling noise.';
+  }
+}
+
+Object.values(sliders).forEach(s => s.addEventListener('input', update));
+
+el('reshuffle').addEventListener('click', () => {
+  seed = Math.floor(Math.random() * 1e9);
+  update();
+});
+
+update();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VAR / IRF Explorer — ECON-5371</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.32.0/plotly.min.js"></script>
+<style>
+  :root {
+    --eo-charcoal: #36454F;
+    --eo-copper: #B87333;
+    --eo-sage: #87A96B;
+    --eo-skyblue: #5B9BD5;
+    --eo-terracotta: #D4745E;
+    --eo-lavender: #8E7AB5;
+    --page-bg: #FAFAF8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--page-bg);
+    font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+    color: var(--eo-charcoal);
+  }
+  header {
+    background: var(--eo-charcoal);
+    color: var(--page-bg);
+    padding: 22px 32px;
+    border-bottom: 4px solid var(--eo-sage);
+  }
+  header h1 {
+    margin: 0;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+  header p {
+    margin: 6px 0 0 0;
+    font-size: 0.95rem;
+    color: #D8DEE2;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+  }
+  a.back {
+    color: #D8DEE2;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    text-decoration: none;
+  }
+  a.back:hover { text-decoration: underline; }
+
+  .layout {
+    display: flex; gap: 24px;
+    padding: 24px 32px 40px 32px;
+    max-width: 1500px; margin: 0 auto;
+    align-items: flex-start;
+  }
+  .controls {
+    flex: 0 0 320px;
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 20px 22px;
+    position: sticky; top: 24px;
+  }
+  .controls h2 {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    margin: 0 0 4px 0;
+  }
+  .controls .sub {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.8rem;
+    color: #6B7680;
+    margin-bottom: 16px;
+  }
+  .group {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #EFEEEA;
+  }
+  .group:last-of-type { border-bottom: none; }
+  .group-label {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--eo-sage);
+    margin-bottom: 8px;
+  }
+
+  .slider-row { margin-bottom: 10px; }
+  .slider-row label {
+    display: flex; justify-content: space-between;
+    font-size: 0.85rem; margin-bottom: 3px;
+  }
+  .slider-row label .val {
+    font-family: Calibri, monospace;
+    font-weight: 600;
+    color: var(--eo-charcoal);
+    background: #F2F0EA;
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 0.76rem;
+  }
+  input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--eo-sage); }
+
+  .radio-row {
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.86rem;
+  }
+  .radio-row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .radio-row input[type="radio"] { accent-color: var(--eo-sage); cursor: pointer; }
+
+  button {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem; font-weight: 600;
+    padding: 9px 14px; border-radius: 6px;
+    border: 1px solid var(--eo-charcoal);
+    background: var(--eo-charcoal); color: white;
+    cursor: pointer; width: 100%;
+  }
+  button:hover { opacity: 0.85; }
+
+  .status {
+    margin-top: 14px;
+    padding: 11px 13px;
+    border-radius: 7px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+  .status.ok { background: #EFF5EA; border: 1px solid var(--eo-sage); color: #4A6B3A; }
+  .status.warn { background: #FBEFEC; border: 1px solid var(--eo-terracotta); color: #8A3F2E; }
+
+  .plots { flex: 1; min-width: 0; }
+  .grid2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .plot-card {
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 6px 6px 2px 6px;
+    margin-bottom: 18px;
+  }
+  .plot-card .title {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 10px 14px 0 14px;
+  }
+
+  footer {
+    text-align: center;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.78rem; color: #9AA1A8;
+    padding: 10px 0 28px 0;
+  }
+
+  @media (max-width: 1000px) {
+    .layout { flex-direction: column; }
+    .controls { position: static; width: 100%; }
+    .grid2x2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../">← All widgets</a>
+  <h1>VAR / Impulse Response Explorer</h1>
+  <p>ECON-5371 · Time Series Analysis and Forecasting — Chapter 7 companion widget</p>
+</header>
+
+<div class="layout">
+
+  <div class="controls">
+    <h2>Two-Variable VAR(1)</h2>
+    <div class="sub">Variables: Growth (G) and Inflation (&pi;). Set the reduced-form coefficient matrix and the contemporaneous correlation of residuals.</div>
+
+    <div class="group">
+      <div class="group-label">Coefficient Matrix A</div>
+      <div class="slider-row">
+        <label>A&#8321;&#8321; — effect of Growth(t&minus;1) on Growth(t) <span class="val" id="val-a11">0.50</span></label>
+        <input type="range" id="a11" min="-0.95" max="0.95" step="0.01" value="0.50">
+      </div>
+      <div class="slider-row">
+        <label>A&#8321;&#8322; — effect of Inflation(t&minus;1) on Growth(t) <span class="val" id="val-a12">0.10</span></label>
+        <input type="range" id="a12" min="-0.95" max="0.95" step="0.01" value="0.10">
+      </div>
+      <div class="slider-row">
+        <label>A&#8322;&#8321; — effect of Growth(t&minus;1) on Inflation(t) <span class="val" id="val-a21">0.20</span></label>
+        <input type="range" id="a21" min="-0.95" max="0.95" step="0.01" value="0.20">
+      </div>
+      <div class="slider-row">
+        <label>A&#8322;&#8322; — effect of Inflation(t&minus;1) on Inflation(t) <span class="val" id="val-a22">0.60</span></label>
+        <input type="range" id="a22" min="-0.95" max="0.95" step="0.01" value="0.60">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Residual Correlation</div>
+      <div class="slider-row">
+        <label>Correlation between Growth and Inflation shocks <span class="val" id="val-rho">0.30</span></label>
+        <input type="range" id="rho" min="-0.9" max="0.9" step="0.05" value="0.30">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Cholesky Ordering</div>
+      <div class="radio-row">
+        <label><input type="radio" name="ordering" value="g_first" checked> Growth first, Inflation second</label>
+        <label><input type="radio" name="ordering" value="pi_first"> Inflation first, Growth second</label>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Horizon</div>
+      <div class="slider-row">
+        <label>Horizon (periods) <span class="val" id="val-H">20</span></label>
+        <input type="range" id="H" min="5" max="40" step="1" value="20">
+      </div>
+    </div>
+
+    <button id="reset">Reset to baseline</button>
+    <div id="status" class="status ok">System is stable.</div>
+  </div>
+
+  <div class="plots">
+    <div class="grid2x2">
+      <div class="plot-card">
+        <div class="title">Shock to Growth → Response of Growth</div>
+        <div id="irf-gg" style="height: 230px;"></div>
+      </div>
+      <div class="plot-card">
+        <div class="title">Shock to Growth → Response of Inflation</div>
+        <div id="irf-gp" style="height: 230px;"></div>
+      </div>
+      <div class="plot-card">
+        <div class="title">Shock to Inflation → Response of Growth</div>
+        <div id="irf-pg" style="height: 230px;"></div>
+      </div>
+      <div class="plot-card">
+        <div class="title">Shock to Inflation → Response of Inflation</div>
+        <div id="irf-pp" style="height: 230px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>ECON-5371 · Department of Economics and Finance — interactive study material, not a substitute for the textbook derivations.</footer>
+
+<script>
+// ---------- EO palette ----------
+const COPPER = '#B87333';
+const SKYBLUE = '#5B9BD5';
+const SAGE = '#87A96B';
+const TERRACOTTA = '#D4745E';
+const CHARCOAL = '#36454F';
+const PAGE_BG = '#FAFAF8';
+const GRIDCOLOR = '#E7E5E0';
+
+// ---------- Linear algebra (2x2 only) ----------
+function matVecMul2(A, v) {
+  return [A[0][0]*v[0] + A[0][1]*v[1], A[1][0]*v[0] + A[1][1]*v[1]];
+}
+function eigenvalues2x2(A) {
+  const a = A[0][0], b = A[0][1], c = A[1][0], d = A[1][1];
+  const tr = a + d, det = a*d - b*c;
+  const disc = tr*tr - 4*det;
+  if (disc >= 0) {
+    const s = Math.sqrt(disc);
+    return [ (tr+s)/2, (tr-s)/2 ].map(x => ({re: x, im: 0}));
+  } else {
+    const s = Math.sqrt(-disc);
+    return [ {re: tr/2, im: s/2}, {re: tr/2, im: -s/2} ];
+  }
+}
+function modulus(z) { return Math.sqrt(z.re*z.re + z.im*z.im); }
+
+// Cholesky of 2x2 covariance [[s1^2, rho*s1*s2],[rho*s1*s2, s2^2]] with unit variances (s1=s2=1)
+// returns lower-triangular P such that P P' = Sigma
+function cholesky2x2(rho) {
+  // Sigma = [[1, rho],[rho, 1]]
+  const l11 = 1;
+  const l21 = rho;
+  const l22 = Math.sqrt(Math.max(1 - rho*rho, 1e-6));
+  return [[l11, 0], [l21, l22]];
+}
+
+// Reorder covariance/coefficients if inflation is ordered first: swap variable roles
+function computeIRFs(A, rho, ordering, H) {
+  // A is reduced-form VAR(1) coefficient matrix, variable order [Growth, Inflation]
+  // Build Cholesky factor for chosen ordering, then map back to [Growth, Inflation] order
+  let P; // 2x2 lower-triangular impact matrix in ORIGINAL [G, Pi] variable space
+  if (ordering === 'g_first') {
+    P = cholesky2x2(rho); // rows/cols already in G, Pi order
+  } else {
+    // order Pi first: build chol in [Pi, G] space then permute back
+    const Pswap = cholesky2x2(rho); // in [Pi, G] order
+    // Pswap maps orthogonal shocks [e_pi, e_g] to reduced innov [u_pi, u_g]
+    // We want mapping to [u_g, u_pi] from shocks [e_pi(first), e_g(second)]
+    // Build full 2x2: rows = [G,Pi], cols = [e_pi_shock, e_g_shock]
+    // Pswap: row0=Pi eq, row1=G eq ; col0=e_pi, col1=e_g
+    P = [
+      [Pswap[1][0], Pswap[1][1]], // Growth equation loadings on [e_pi, e_g]
+      [Pswap[0][0], Pswap[0][1]]  // Inflation equation loadings on [e_pi, e_g]
+    ];
+  }
+
+  // Impulse response: R_h = A^h * P, R_0 = P
+  const irf = { gg: [], gp: [], pg: [], pp: [] };
+  let Ah = [[1,0],[0,1]]; // A^0 = I
+
+  for (let h = 0; h <= H; h++) {
+    // R_h = Ah * P
+    const R = [
+      [Ah[0][0]*P[0][0] + Ah[0][1]*P[1][0], Ah[0][0]*P[0][1] + Ah[0][1]*P[1][1]],
+      [Ah[1][0]*P[0][0] + Ah[1][1]*P[1][0], Ah[1][0]*P[0][1] + Ah[1][1]*P[1][1]]
+    ];
+    // Columns: col0 = shock ordered first, col1 = shock ordered second
+    // Need to map to (Growth shock, Inflation shock) regardless of ordering
+    let respToGShock, respToPiShock;
+    if (ordering === 'g_first') {
+      respToGShock  = [R[0][0], R[1][0]]; // col0 = growth shock
+      respToPiShock = [R[0][1], R[1][1]]; // col1 = inflation shock
+    } else {
+      respToPiShock = [R[0][0], R[1][0]]; // col0 = inflation shock (ordered first)
+      respToGShock  = [R[0][1], R[1][1]]; // col1 = growth shock
+    }
+    irf.gg.push(respToGShock[0]);  // Growth response to Growth shock
+    irf.gp.push(respToGShock[1]);  // Inflation response to Growth shock
+    irf.pg.push(respToPiShock[0]); // Growth response to Inflation shock
+    irf.pp.push(respToPiShock[1]); // Inflation response to Inflation shock
+
+    // advance Ah -> A^(h+1)
+    Ah = [
+      [A[0][0]*Ah[0][0] + A[0][1]*Ah[1][0], A[0][0]*Ah[0][1] + A[0][1]*Ah[1][1]],
+      [A[1][0]*Ah[0][0] + A[1][1]*Ah[1][0], A[1][0]*Ah[0][1] + A[1][1]*Ah[1][1]]
+    ];
+  }
+  return irf;
+}
+
+// ---------- Plot helpers ----------
+function baseLayout(xTitle, yTitle) {
+  return {
+    paper_bgcolor: PAGE_BG, plot_bgcolor: PAGE_BG,
+    margin: { l: 46, r: 14, t: 8, b: 34 },
+    font: { family: 'Calibri, sans-serif', color: CHARCOAL, size: 11 },
+    xaxis: { title: xTitle, gridcolor: GRIDCOLOR, zerolinecolor: '#C9C6BF', linecolor: CHARCOAL, ticks: 'outside' },
+    yaxis: { title: yTitle, gridcolor: GRIDCOLOR, zerolinecolor: '#C9C6BF', linecolor: CHARCOAL, ticks: 'outside' },
+    showlegend: false
+  };
+}
+
+function drawIRF(divId, values, H, color) {
+  const x = Array.from({length: H + 1}, (_, i) => i);
+  const trace = { x, y: values, type: 'scatter', mode: 'lines', line: { color, width: 2 },
+    fill: 'tozeroy', fillcolor: color + '22' };
+  const zero = { x, y: x.map(() => 0), type: 'scatter', mode: 'lines', line: { color: '#9AA1A8', width: 1, dash: 'dot' } };
+  const layout = baseLayout('Horizon', 'Response');
+  layout.xaxis.range = [0, H];
+  Plotly.react(divId, [zero, trace], layout, {displayModeBar: false, responsive: true});
+}
+
+// ---------- Controller ----------
+const el = id => document.getElementById(id);
+const sliders = {
+  a11: el('a11'), a12: el('a12'), a21: el('a21'), a22: el('a22'),
+  rho: el('rho'), H: el('H')
+};
+const vals = {
+  a11: el('val-a11'), a12: el('val-a12'), a21: el('val-a21'), a22: el('val-a22'),
+  rho: el('val-rho'), H: el('val-H')
+};
+
+function getOrdering() {
+  return document.querySelector('input[name="ordering"]:checked').value;
+}
+document.querySelectorAll('input[name="ordering"]').forEach(r => r.addEventListener('change', update));
+
+function update() {
+  const a11 = parseFloat(sliders.a11.value);
+  const a12 = parseFloat(sliders.a12.value);
+  const a21 = parseFloat(sliders.a21.value);
+  const a22 = parseFloat(sliders.a22.value);
+  const rho = parseFloat(sliders.rho.value);
+  const H = parseInt(sliders.H.value);
+  const ordering = getOrdering();
+
+  vals.a11.textContent = a11.toFixed(2);
+  vals.a12.textContent = a12.toFixed(2);
+  vals.a21.textContent = a21.toFixed(2);
+  vals.a22.textContent = a22.toFixed(2);
+  vals.rho.textContent = rho.toFixed(2);
+  vals.H.textContent = H;
+
+  const A = [[a11, a12], [a21, a22]];
+
+  const eigs = eigenvalues2x2(A);
+  const maxMod = Math.max(...eigs.map(modulus));
+  const statusBox = el('status');
+  if (maxMod < 1) {
+    statusBox.className = 'status ok';
+    statusBox.innerHTML = `System is stable. Largest eigenvalue modulus = ${maxMod.toFixed(3)}.`;
+  } else {
+    statusBox.className = 'status warn';
+    statusBox.innerHTML = `Warning: system is <strong>not stable</strong> (largest eigenvalue modulus = ${maxMod.toFixed(3)} &ge; 1). Shocks will not decay — IRFs shown are not economically meaningful.`;
+  }
+
+  const irf = computeIRFs(A, rho, ordering, H);
+  drawIRF('irf-gg', irf.gg, H, COPPER);
+  drawIRF('irf-gp', irf.gp, H, SKYBLUE);
+  drawIRF('irf-pg', irf.pg, H, TERRACOTTA);
+  drawIRF('irf-pp', irf.pp, H, SAGE);
+}
+
+Object.values(sliders).forEach(s => s.addEventListener('input', update));
+
+el('reset').addEventListener('click', () => {
+  sliders.a11.value = 0.50;
+  sliders.a12.value = 0.10;
+  sliders.a21.value = 0.20;
+  sliders.a22.value = 0.60;
+  sliders.rho.value = 0.30;
+  sliders.H.value = 20;
+  document.querySelector('input[name="ordering"][value="g_first"]').checked = true;
+  update();
+});
+
+update();
+</script>
+
+</body>
+</html>

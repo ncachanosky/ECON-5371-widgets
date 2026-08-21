@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Filters Refresher — ECON-5371</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.32.0/plotly.min.js"></script>
+<style>
+  :root {
+    --eo-charcoal: #36454F;
+    --eo-copper: #B87333;
+    --eo-sage: #87A96B;
+    --eo-skyblue: #5B9BD5;
+    --eo-terracotta: #D4745E;
+    --eo-lavender: #8E7AB5;
+    --page-bg: #FAFAF8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--page-bg);
+    font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+    color: var(--eo-charcoal);
+  }
+  header {
+    background: var(--eo-charcoal);
+    color: var(--page-bg);
+    padding: 22px 32px;
+    border-bottom: 4px solid var(--eo-lavender);
+    background-image: linear-gradient(90deg, var(--eo-charcoal) 0%, var(--eo-charcoal) 100%);
+  }
+  header::after {
+    content: '';
+    display: block;
+  }
+  header h1 {
+    margin: 0;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+  header p {
+    margin: 6px 0 0 0;
+    font-size: 0.95rem;
+    color: #D8DEE2;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+  }
+  a.back {
+    color: #D8DEE2;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    text-decoration: none;
+  }
+  a.back:hover { text-decoration: underline; }
+
+  .layout {
+    display: flex; gap: 24px;
+    padding: 24px 32px 40px 32px;
+    max-width: 1480px; margin: 0 auto;
+    align-items: flex-start;
+  }
+  .controls {
+    flex: 0 0 320px;
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 20px 22px;
+    position: sticky; top: 24px;
+  }
+  .controls h2 {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    margin: 0 0 4px 0;
+  }
+  .controls .sub {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.8rem;
+    color: #6B7680;
+    margin-bottom: 16px;
+  }
+  .group {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #EFEEEA;
+  }
+  .group:last-of-type { border-bottom: none; }
+  .group-label {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--eo-lavender);
+    margin-bottom: 8px;
+  }
+
+  .slider-row { margin-bottom: 10px; }
+  .slider-row label {
+    display: flex; justify-content: space-between;
+    font-size: 0.86rem; margin-bottom: 3px;
+  }
+  .slider-row label .val {
+    font-family: Calibri, monospace;
+    font-weight: 600;
+    color: var(--eo-charcoal);
+    background: #F2F0EA;
+    padding: 1px 7px; border-radius: 4px;
+    font-size: 0.78rem;
+  }
+  input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--eo-lavender); }
+
+  .checkbox-row {
+    display: flex; align-items: center; gap: 7px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+  .checkbox-row input[type="checkbox"] { cursor: pointer; }
+  .checkbox-row .sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; margin-right: 2px; }
+
+  .radio-row {
+    display: flex; flex-direction: column; gap: 6px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+  }
+  .radio-row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .radio-row input[type="radio"] { accent-color: var(--eo-copper); cursor: pointer; }
+
+  button {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.85rem; font-weight: 600;
+    padding: 9px 14px; border-radius: 6px;
+    border: 1px solid var(--eo-charcoal);
+    background: var(--eo-charcoal); color: white;
+    cursor: pointer; width: 100%;
+  }
+  button.secondary { background: white; color: var(--eo-charcoal); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row button { flex: 1; }
+  button:hover { opacity: 0.85; }
+
+  .stat-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    margin-top: 10px;
+  }
+  .stat-box {
+    background: #F7F5F1;
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .stat-box .label {
+    font-size: 0.68rem;
+    color: #6B7680;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .stat-box .value {
+    font-size: 0.98rem;
+    font-weight: 700;
+  }
+
+  .plots { flex: 1; min-width: 0; }
+  .plot-card {
+    background: #FFFFFF;
+    border: 1px solid #E3E1DC;
+    border-radius: 10px;
+    padding: 6px 6px 2px 6px;
+    margin-bottom: 18px;
+  }
+  .plot-card .title {
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 10px 14px 0 14px;
+  }
+  .legend-wrap { padding: 4px 14px 0 14px; }
+  .legend-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.76rem; margin-right: 12px;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+  }
+  .legend-chip .sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+  .two-col { display: flex; gap: 18px; }
+  .two-col .plot-card { flex: 1; }
+
+  footer {
+    text-align: center;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+    font-size: 0.78rem; color: #9AA1A8;
+    padding: 10px 0 28px 0;
+  }
+
+  @media (max-width: 1000px) {
+    .layout { flex-direction: column; }
+    .controls { position: static; width: 100%; }
+    .two-col { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../">← All widgets</a>
+  <h1>Filters Refresher — Four Ways to Extract a Trend</h1>
+  <p>ECON-5371 · Time Series Analysis and Forecasting — end-of-course capstone comparison</p>
+</header>
+
+<div class="layout">
+
+  <div class="controls">
+    <h2>Simulated Data-Generating Process</h2>
+    <div class="sub">y(t) = trend(t) + cycle(t) + noise(t). Because this is simulated, the true trend is known &mdash; the one advantage a textbook example on real GDP can't offer.</div>
+
+    <div class="group">
+      <div class="group-label">Components</div>
+      <div class="slider-row">
+        <label>Trend curvature <span class="val" id="val-curve">0.60</span></label>
+        <input type="range" id="curve" min="0" max="1.5" step="0.05" value="0.60">
+      </div>
+      <div class="slider-row">
+        <label>Cycle amplitude <span class="val" id="val-cycamp">2.0</span></label>
+        <input type="range" id="cycamp" min="0" max="5" step="0.1" value="2.0">
+      </div>
+      <div class="slider-row">
+        <label>Cycle period (quarters) <span class="val" id="val-cycperiod">32</span></label>
+        <input type="range" id="cycperiod" min="8" max="60" step="1" value="32">
+      </div>
+      <div class="slider-row">
+        <label>Noise volatility <span class="val" id="val-noise">1.0</span></label>
+        <input type="range" id="noise" min="0.1" max="4" step="0.1" value="1.0">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Show Filters</div>
+      <div class="checkbox-row"><input type="checkbox" id="show-true" checked><span class="sw" style="background:#36454F;"></span><label for="show-true">True trend (ground truth)</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="show-hp" checked><span class="sw" style="background:#B87333;"></span><label for="show-hp">HP filter (&lambda;=1600)</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="show-lin" checked><span class="sw" style="background:#87A96B;"></span><label for="show-lin">Linear detrend</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="show-kf" checked><span class="sw" style="background:#5B9BD5;"></span><label for="show-kf">Kalman / local level (smoothed)</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="show-ets" checked><span class="sw" style="background:#D4745E;"></span><label for="show-ets">ETS / Holt level</label></div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">HP End-Point Bias Demo</div>
+      <div class="radio-row">
+        <label><input type="radio" name="hpmode" value="full" checked> Full-sample HP trend</label>
+        <label><input type="radio" name="hpmode" value="realtime"> Real-time HP trend (re-run each period)</label>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Fit Quality vs. True Trend</div>
+      <div class="stat-panel" id="stat-panel">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="reshuffle">Reshuffle draw</button>
+      <button id="reset" class="secondary">Reset</button>
+    </div>
+  </div>
+
+  <div class="plots">
+    <div class="plot-card">
+      <div class="title">Extracted Trends vs. Ground Truth</div>
+      <div class="legend-wrap">
+        <span class="legend-chip"><span class="sw" style="background:#C9C6BF;"></span>Observed y(t)</span>
+        <span class="legend-chip"><span class="sw" style="background:#36454F;"></span>True trend</span>
+        <span class="legend-chip"><span class="sw" style="background:#B87333;"></span>HP filter</span>
+        <span class="legend-chip"><span class="sw" style="background:#87A96B;"></span>Linear detrend</span>
+        <span class="legend-chip"><span class="sw" style="background:#5B9BD5;"></span>Kalman (smoothed)</span>
+        <span class="legend-chip"><span class="sw" style="background:#D4745E;"></span>ETS / Holt</span>
+      </div>
+      <div id="main-plot" style="height: 380px;"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="plot-card">
+        <div class="title">Extraction Error by Method (RMSE vs. true trend)</div>
+        <div id="rmse-plot" style="height: 260px;"></div>
+      </div>
+      <div class="plot-card">
+        <div class="title">HP End-Point Bias: Full-Sample vs. Real-Time Trend (last 40 periods)</div>
+        <div id="endpoint-plot" style="height: 260px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>ECON-5371 · Department of Economics and Finance — interactive study material, not a substitute for the textbook derivations.</footer>
+
+<script>
+// ---------- EO palette ----------
+const COPPER = '#B87333';
+const SKYBLUE = '#5B9BD5';
+const SAGE = '#87A96B';
+const TERRACOTTA = '#D4745E';
+const CHARCOAL = '#36454F';
+const GREY = '#C9C6BF';
+const PAGE_BG = '#FAFAF8';
+const GRIDCOLOR = '#E7E5E0';
+
+// ---------- RNG ----------
+let seed = 20260824;
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let rng = mulberry32(seed);
+function gauss() {
+  let u1 = rng() || 1e-9, u2 = rng();
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+const T = 200;
+
+// ---------- Simulate y = trend + cycle + noise ----------
+function simulate(curve, cycAmp, cycPeriod, noiseSd) {
+  const trueTrend = new Array(T);
+  const y = new Array(T);
+  for (let t = 0; t < T; t++) {
+    // smooth curved trend: quadratic-ish with adjustable curvature
+    const tt = t / T;
+    trueTrend[t] = 50 + 20 * tt + curve * 15 * (tt - 0.5) * (tt - 0.5) * Math.sign(curve === 0 ? 1 : 1);
+  }
+  for (let t = 0; t < T; t++) {
+    const cycle = cycAmp * Math.sin(2 * Math.PI * t / cycPeriod);
+    y[t] = trueTrend[t] + cycle + noiseSd * gauss();
+  }
+  return { trueTrend, y };
+}
+
+// ---------- Linear detrend ----------
+function linearDetrend(y) {
+  const n = y.length;
+  const xs = Array.from({length: n}, (_, i) => i);
+  const xMean = xs.reduce((a,b)=>a+b,0)/n;
+  const yMean = y.reduce((a,b)=>a+b,0)/n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) { num += (xs[i]-xMean)*(y[i]-yMean); den += (xs[i]-xMean)**2; }
+  const slope = num/den;
+  const intercept = yMean - slope*xMean;
+  return xs.map(x => intercept + slope*x);
+}
+
+// ---------- HP filter via banded linear solve ----------
+// Solves (I + lambda * D'D) tau = y, where D is the second-difference operator.
+// Implemented via Thomas-like elimination on the pentadiagonal system.
+function hpFilter(y, lambda) {
+  const n = y.length;
+  // Build pentadiagonal matrix A = I + lambda*D'D explicitly (n small enough, <=200)
+  // D'D has known banded structure: diag pattern [1,5,6,6,...,6,5,1], offdiag1 [-2,-4,-4,...,-4,-2], offdiag2 [1,1,...,1]
+  const A = Array.from({length:n}, () => new Array(n).fill(0));
+  for (let i=0;i<n;i++) A[i][i] = 1;
+
+  // second-difference matrix D: (n-2) x n, D[k] = y[k]-2y[k+1]+y[k+2]
+  // Compute D'D directly via convolution weights
+  const w = [1,-2,1];
+  const DtD = Array.from({length:n}, () => new Array(n).fill(0));
+  for (let k=0;k<n-2;k++){
+    for(let a=0;a<3;a++){
+      for(let b=0;b<3;b++){
+        DtD[k+a][k+b]+= w[a]*w[b];
+      }
+    }
+  }
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++) A[i][j]+= lambda*DtD[i][j];
+
+  // Solve A*tau = y via Gaussian elimination (n<=200, dense but fine for a single client-side solve)
+  return gaussianSolve(A, y.slice());
+}
+
+function gaussianSolve(A, b) {
+  const n = b.length;
+  // shallow copy A rows to avoid mutating caller's array structure across calls
+  const M = A.map(row => row.slice());
+  for (let col = 0; col < n; col++) {
+    // partial pivot
+    let piv = col;
+    let maxVal = Math.abs(M[col][col]);
+    for (let r = col+1; r < n; r++) {
+      if (Math.abs(M[r][col]) > maxVal) { maxVal = Math.abs(M[r][col]); piv = r; }
+    }
+    if (piv !== col) {
+      [M[col], M[piv]] = [M[piv], M[col]];
+      [b[col], b[piv]] = [b[piv], b[col]];
+    }
+    const pivotVal = M[col][col];
+    if (Math.abs(pivotVal) < 1e-12) continue;
+    for (let r = col+1; r < n; r++) {
+      const factor = M[r][col] / pivotVal;
+      if (factor === 0) continue;
+      for (let c = col; c < n; c++) M[r][c] -= factor * M[col][c];
+      b[r] -= factor * b[col];
+    }
+  }
+  const x = new Array(n).fill(0);
+  for (let r = n-1; r >= 0; r--) {
+    let s = b[r];
+    for (let c = r+1; c < n; c++) s -= M[r][c]*x[c];
+    x[r] = s / M[r][r];
+  }
+  return x;
+}
+
+// ---------- Kalman filter + RTS smoother (local level model) ----------
+function kalmanSmooth(y, sigEps, sigEta) {
+  const n = y.length;
+  const muFilt = new Array(n), Pfilt = new Array(n);
+  const muPred = new Array(n), Ppred = new Array(n);
+  muFilt[0] = y[0]; Pfilt[0] = sigEps;
+  muPred[0] = muFilt[0]; Ppred[0] = Pfilt[0];
+  for (let t=1;t<n;t++){
+    const muP = muFilt[t-1];
+    const Pp = Pfilt[t-1] + sigEta;
+    muPred[t]=muP; Ppred[t]=Pp;
+    const v = y[t]-muP;
+    const F = Pp+sigEps;
+    const K = Pp/F;
+    muFilt[t] = muP + K*v;
+    Pfilt[t] = (1-K)*Pp;
+  }
+  const muSmooth = new Array(n);
+  muSmooth[n-1] = muFilt[n-1];
+  for (let t=n-2;t>=0;t--){
+    const Jt = Pfilt[t]/Ppred[t+1];
+    muSmooth[t] = muFilt[t] + Jt*(muSmooth[t+1]-muPred[t+1]);
+  }
+  return muSmooth;
+}
+
+// ---------- ETS / Holt's linear trend method (level component) ----------
+function holtLevel(y, alpha, beta) {
+  const n = y.length;
+  const level = new Array(n);
+  const trend = new Array(n);
+  level[0] = y[0];
+  trend[0] = y[1] !== undefined ? y[1]-y[0] : 0;
+  for (let t=1;t<n;t++){
+    const prevLevel = level[t-1], prevTrend = trend[t-1];
+    level[t] = alpha*y[t] + (1-alpha)*(prevLevel+prevTrend);
+    trend[t] = beta*(level[t]-prevLevel) + (1-beta)*prevTrend;
+  }
+  return level;
+}
+
+// ---------- RMSE ----------
+function rmse(a, b) {
+  const n = Math.min(a.length, b.length);
+  let s = 0;
+  for (let i=0;i<n;i++) s += (a[i]-b[i])**2;
+  return Math.sqrt(s/n);
+}
+
+// ---------- Plot helpers ----------
+function baseLayout(xTitle, yTitle) {
+  return {
+    paper_bgcolor: PAGE_BG, plot_bgcolor: PAGE_BG,
+    margin: { l: 50, r: 20, t: 10, b: 40 },
+    font: { family: 'Calibri, sans-serif', color: CHARCOAL, size: 12 },
+    xaxis: { title: xTitle, gridcolor: GRIDCOLOR, zerolinecolor: '#C9C6BF', linecolor: CHARCOAL, ticks: 'outside' },
+    yaxis: { title: yTitle, gridcolor: GRIDCOLOR, zerolinecolor: '#C9C6BF', linecolor: CHARCOAL, ticks: 'outside' },
+    showlegend: false
+  };
+}
+
+function drawMain(y, trueTrend, hp, lin, kf, ets, flags) {
+  const x = Array.from({length:T},(_,i)=>i+1);
+  const traces = [];
+  traces.push({x,y,type:'scatter',mode:'markers',marker:{color:GREY,size:3,opacity:0.55}});
+  if (flags.true) traces.push({x,y:trueTrend,type:'scatter',mode:'lines',line:{color:CHARCOAL,width:2,dash:'dot'}});
+  if (flags.hp) traces.push({x,y:hp,type:'scatter',mode:'lines',line:{color:COPPER,width:1.8}});
+  if (flags.lin) traces.push({x,y:lin,type:'scatter',mode:'lines',line:{color:SAGE,width:1.8}});
+  if (flags.kf) traces.push({x,y:kf,type:'scatter',mode:'lines',line:{color:SKYBLUE,width:1.8}});
+  if (flags.ets) traces.push({x,y:ets,type:'scatter',mode:'lines',line:{color:TERRACOTTA,width:1.8}});
+  const layout = baseLayout('t','Level');
+  layout.xaxis.range=[1,T];
+  Plotly.react('main-plot', traces, layout, {displayModeBar:false, responsive:true});
+}
+
+function drawRMSE(vals) {
+  const labels = ['HP filter','Linear detrend','Kalman (smoothed)','ETS / Holt'];
+  const colors = [COPPER, SAGE, SKYBLUE, TERRACOTTA];
+  const trace = {x:labels, y:vals, type:'bar', marker:{color:colors}};
+  const layout = baseLayout('', 'RMSE vs. true trend');
+  Plotly.react('rmse-plot', [trace], layout, {displayModeBar:false, responsive:true});
+}
+
+function drawEndpoint(xTail, fullTail, rtTail, trueTail) {
+  const traces = [
+    {x:xTail,y:trueTail,type:'scatter',mode:'lines',line:{color:CHARCOAL,width:1.8,dash:'dot'}},
+    {x:xTail,y:fullTail,type:'scatter',mode:'lines',line:{color:SKYBLUE,width:2}},
+    {x:xTail,y:rtTail,type:'scatter',mode:'lines',line:{color:TERRACOTTA,width:2}}
+  ];
+  const layout = baseLayout('t','Trend level');
+  layout.xaxis.range=[xTail[0],xTail[xTail.length-1]];
+  Plotly.react('endpoint-plot', traces, layout, {displayModeBar:false, responsive:true});
+}
+
+// ---------- Controller ----------
+const el = id => document.getElementById(id);
+const sliders = { curve: el('curve'), cycamp: el('cycamp'), cycperiod: el('cycperiod'), noise: el('noise') };
+const vals = { curve: el('val-curve'), cycamp: el('val-cycamp'), cycperiod: el('val-cycperiod'), noise: el('val-noise') };
+const flagsEls = { true: el('show-true'), hp: el('show-hp'), lin: el('show-lin'), kf: el('show-kf'), ets: el('show-ets') };
+
+function getHPMode() {
+  return document.querySelector('input[name="hpmode"]:checked').value;
+}
+document.querySelectorAll('input[name="hpmode"]').forEach(r => r.addEventListener('change', update));
+
+const LAMBDA = 1600; // quarterly convention, matches textbook default
+const SIG_EPS_KF = 4.0, SIG_ETA_KF = 0.5; // reuse Ch.11 example values as sensible defaults
+const ALPHA_ETS = 0.3, BETA_ETS = 0.1; // standard Holt defaults
+
+function computeRealTimeHP(y, lambda) {
+  // Recompute HP trend using only data up to each t (expanding window), take last point of each run.
+  // For performance, only do this for the tail we display (last 40 points), starting window >= 40.
+  const n = y.length;
+  const startAt = Math.max(20, n - 60);
+  const rt = new Array(n).fill(NaN);
+  for (let end = startAt; end < n; end++) {
+    const sub = y.slice(0, end+1);
+    const trend = hpFilter(sub, lambda);
+    rt[end] = trend[trend.length-1];
+  }
+  return rt;
+}
+
+function update() {
+  const curve = parseFloat(sliders.curve.value);
+  const cycAmp = parseFloat(sliders.cycamp.value);
+  const cycPeriod = parseFloat(sliders.cycperiod.value);
+  const noiseSd = parseFloat(sliders.noise.value);
+
+  vals.curve.textContent = curve.toFixed(2);
+  vals.cycamp.textContent = cycAmp.toFixed(1);
+  vals.cycperiod.textContent = Math.round(cycPeriod);
+  vals.noise.textContent = noiseSd.toFixed(1);
+
+  rng = mulberry32(seed);
+  const { trueTrend, y } = simulate(curve, cycAmp, cycPeriod, noiseSd);
+
+  const hp = hpFilter(y, LAMBDA);
+  const lin = linearDetrend(y);
+  const kf = kalmanSmooth(y, SIG_EPS_KF, SIG_ETA_KF);
+  const ets = holtLevel(y, ALPHA_ETS, BETA_ETS);
+
+  const flags = {
+    true: flagsEls.true.checked, hp: flagsEls.hp.checked, lin: flagsEls.lin.checked,
+    kf: flagsEls.kf.checked, ets: flagsEls.ets.checked
+  };
+
+  drawMain(y, trueTrend, hp, lin, kf, ets, flags);
+
+  const rmseVals = [rmse(hp,trueTrend), rmse(lin,trueTrend), rmse(kf,trueTrend), rmse(ets,trueTrend)];
+  drawRMSE(rmseVals);
+
+  const statPanel = el('stat-panel');
+  const labels = ['HP filter','Linear detrend','Kalman','ETS/Holt'];
+  const colors = [COPPER, SAGE, SKYBLUE, TERRACOTTA];
+  statPanel.innerHTML = labels.map((lab,i) =>
+    `<div class="stat-box"><div class="label">${lab}</div><div class="value" style="color:${colors[i]};">${rmseVals[i].toFixed(2)}</div></div>`
+  ).join('');
+
+  // End-point bias tail comparison
+  const tailStart = T - 40;
+  const xTail = Array.from({length:40}, (_,i) => tailStart + i + 1);
+  const fullTail = hp.slice(tailStart);
+  const trueTail = trueTrend.slice(tailStart);
+  const rtFull = computeRealTimeHP(y, LAMBDA);
+  const rtTail = rtFull.slice(tailStart);
+  drawEndpoint(xTail, fullTail, rtTail, trueTail);
+}
+
+Object.values(sliders).forEach(s => s.addEventListener('input', update));
+Object.values(flagsEls).forEach(c => c.addEventListener('change', update));
+
+el('reshuffle').addEventListener('click', () => {
+  seed = Math.floor(Math.random()*1e9);
+  update();
+});
+
+el('reset').addEventListener('click', () => {
+  sliders.curve.value = 0.60;
+  sliders.cycamp.value = 2.0;
+  sliders.cycperiod.value = 32;
+  sliders.noise.value = 1.0;
+  Object.values(flagsEls).forEach(c => c.checked = true);
+  document.querySelector('input[name="hpmode"][value="full"]').checked = true;
+  seed = 20260824;
+  update();
+});
+
+update();
+</script>
+
+</body>
+</html>
